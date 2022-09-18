@@ -29,8 +29,12 @@ function onSearch(e) {
   loadMore();
 }
 
+
+
+
 async function loadMore() {
   refs.loadButton.classList.add('hide');
+  window.removeEventListener("scroll", scroll);
 
   try {
 const images = await imagesSearch.fetchImges();
@@ -41,20 +45,26 @@ if (images.hits.length === 0) {
 }
 
 appendImagesMarkup(images.hits);
+gallery.refresh();
+if (imagesSearch.pageNumber > 1) smoothScrolling();
+
+
+console.log(Math.ceil(Number(images.totalHits) / picturesPerPage));
+console.log(imagesSearch.pageNumber);
+console.log(Math.ceil(Number(images.totalHits) / picturesPerPage) ===
+imagesSearch.pageNumber);
+
+
 
 if (
   Math.ceil(Number(images.totalHits) / picturesPerPage) ===
   imagesSearch.pageNumber
 ) {
-  Notify.info(
-    "We're sorry, but you've reached the end of search results.",
-    options
-  );
-  return;
+  window.addEventListener("scroll", scroll); 
+    
+    return;
 }
-gallery.refresh();
 
-if (imagesSearch.pageNumber > 1) smoothScrolling();
 imagesSearch.incrementPage();
 refs.loadButton.classList.remove('hide');
 } catch (error) {
@@ -96,3 +106,14 @@ function appendImagesMarkup(images) {
 function clearImagesContainer() {
   refs.gallery.innerHTML = '';
 }
+
+
+function scroll(ev) {
+  if ((window. innerHeight + window. scrollY) >= document. body. scrollHeight) {
+    Notify.info(
+      "We're sorry, but you've reached the end of search results.",
+      options
+    );
+    console.log("Bottom");
+  }
+  };
