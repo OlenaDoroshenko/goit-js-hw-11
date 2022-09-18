@@ -1,107 +1,98 @@
 import { refs } from './js/refs';
+import { ApiImagesSearch, picturesPerPage } from './js/search';
 import { imagesMarkup } from './js/markup';
+import { smoothScrolling } from './js/smoothScrolling';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+// Описаний в документації
+import SimpleLightbox from 'simplelightbox';
+// Додатковий імпорт стилів
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
-refs.form.addEventListener("submit",onSearch);
-refs.loadButton.addEventListener("click",loadMore);
+let gallery = new SimpleLightbox('.photo-card a');
+const options = {
+  width: '500px',
+  position: 'center-center',
+  fontSize: '20px',
+  closeButton: true,
+};
 
-const BASE_URL = 'https://pixabay.com/api/';
-const API_KEY = "29964442-a5edbec7c684d468053165f7c";
-const picturesPerPage = 40;
-
-class ApiImagesSearch{
-
-    constructor(){
-        this.searchRequest = "";
-        this.page = 1;
-    }
-
-
-
-fetchImges(){
-  const params = new URLSearchParams({
-    key: API_KEY,
-    q: this.searchRequest,
-    image_type: "photo",
-    orientation: "horizontal",
-    safesearch: true,
-    page: this.page,
-    per_page: picturesPerPage,
-  })
-
-
-    const url = `${BASE_URL}?${params}`;
-    return fetch(url).then(response => response.json())
-}
-
-set request(newRequest){
-    this.searchRequest = newRequest;
-}
-
-get request(){
-    return this.searchRequest;
-}
-
-incrementPage(){
-  this.page+=1;
-}
-
-resetPage(){
-  this.page = 1;
-}
-
-get pageNumber(){
-  return this.page;
-}
-
-}
+refs.form.addEventListener('submit', onSearch);
+refs.loadButton.addEventListener('click', loadMore);
 
 const imagesSearch = new ApiImagesSearch();
 
-function onSearch(e){
-    e.preventDefault();
-    imagesSearch.resetPage();
-    clearImagesContainer();
-    // refs.loadButton.classList.add("hide");
-    imagesSearch.request = e.currentTarget.elements.searchQuery.value;
-    loadMore();   
-    // refs.loadButton.classList.remove("hide");
-};
-
-
-
-
-function loadMore(){
-  refs.loadButton.classList.add("hide");
-  
-
-  imagesSearch.fetchImges().then(images => {
-      
-    if(images.hits.length === 0) {
-      Notify.failure("Nothing found!");
-      refs.form.reset();
-      return;
-    }
-
-    appendImagesMarkup(images.hits); 
-
-    if(Math.ceil(Number(images.totalHits) / picturesPerPage) === imagesSearch.pageNumber){
-      Notify.info("We're sorry, but you've reached the end of search results.");
-      return;
-    }
-
-    imagesSearch.incrementPage();
-    refs.loadButton.classList.remove("hide");
-    
-  });
- 
-};
-
-
-function appendImagesMarkup(images){
-    refs.gallery.insertAdjacentHTML('beforeend',imagesMarkup(images));
+function onSearch(e) {
+  e.preventDefault();
+  imagesSearch.resetPage();
+  clearImagesContainer();
+  imagesSearch.request = e.currentTarget.elements.searchQuery.value;
+  loadMore();
 }
 
-function clearImagesContainer(){
-  refs.gallery.innerHTML = "";
+async function loadMore() {
+  refs.loadButton.classList.add('hide');
+
+  try {
+const images = await imagesSearch.fetchImges();
+if (images.hits.length === 0) {
+  Notify.failure('Nothing found!', options);
+  refs.form.reset();
+  return;
+}
+
+appendImagesMarkup(images.hits);
+
+if (
+  Math.ceil(Number(images.totalHits) / picturesPerPage) ===
+  imagesSearch.pageNumber
+) {
+  Notify.info(
+    "We're sorry, but you've reached the end of search results.",
+    options
+  );
+  return;
+}
+gallery.refresh();
+
+if (imagesSearch.pageNumber > 1) smoothScrolling();
+imagesSearch.incrementPage();
+refs.loadButton.classList.remove('hide');
+} catch (error) {
+  console.log(error.message);
+}
+
+//Then 
+  // imagesSearch.fetchImges().then(images => {
+  //   if (images.hits.length === 0) {
+  //     Notify.failure('Nothing found!', options);
+  //     refs.form.reset();
+  //     return;
+  //   }
+
+  //   appendImagesMarkup(images.hits);
+
+  //   if (
+  //     Math.ceil(Number(images.totalHits) / picturesPerPage) ===
+  //     imagesSearch.pageNumber
+  //   ) {
+  //     Notify.info(
+  //       "We're sorry, but you've reached the end of search results.",
+  //       options
+  //     );
+  //     return;
+  //   }
+  //   gallery.refresh();
+
+  //   if (imagesSearch.pageNumber > 1) smoothScrolling();
+  //   imagesSearch.incrementPage();
+  //   refs.loadButton.classList.remove('hide');
+  // }).catch(error => console.log(error));
+}
+
+function appendImagesMarkup(images) {
+  refs.gallery.insertAdjacentHTML('beforeend', imagesMarkup(images));
+}
+
+function clearImagesContainer() {
+  refs.gallery.innerHTML = '';
 }

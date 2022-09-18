@@ -1,8 +1,8 @@
 export function imagesMarkup(images){
     const markup = images.map(image => {
-        const { webformatURL, tags, likes, views, comments, downloads} = image;
+        const { webformatURL, tags, likes, views, comments, downloads, largeImageURL} = image;
         return `<div class="photo-card">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+        <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
         <div class="info">
           <p class="info-item">
             <b>Likes </b>${likes}
