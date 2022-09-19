@@ -25,7 +25,15 @@ function onSearch(e) {
   e.preventDefault();
   imagesSearch.resetPage();
   clearImagesContainer();
+
+
   imagesSearch.request = e.currentTarget.elements.searchQuery.value;
+
+  console.log(imagesSearch.request);
+  if (imagesSearch.request.trim() === ""){
+    Notify.failure('Type smth!', options);
+    return;
+  }
   loadMore();
 }
 
